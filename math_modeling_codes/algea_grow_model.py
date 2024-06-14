@@ -7,7 +7,7 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # Required for 3D plotting
 
 # Load the data from the CSV file
-data = pd.read_csv('filtered_data.csv')
+data = pd.read_csv('/Users/luoyaxin/Desktop/DB4_Group1/collected_previous_data.csv')
 
 # Strip any leading or trailing whitespace characters from the column names
 data.columns = data.columns.str.strip()
