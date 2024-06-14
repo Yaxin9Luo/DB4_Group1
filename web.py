@@ -22,6 +22,7 @@
 #   WeMos D1 Mini
 #
 # User configuration parameters are indicated with "ENTER_".
+# Made by Yaxin Luo aka DavidTheCrazy and Antoine Ohn aka 
 from device_code.i2c_test import *    
 from device_code.read_temp import *
 import time
