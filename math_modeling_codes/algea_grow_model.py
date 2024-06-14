@@ -1,70 +1,127 @@
 import pandas as pd
-import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
+import numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # Required for 3D plotting
 
-# Load the data
-data = pd.read_csv('/Users/luoyaxin/Desktop/DB4_Group1/filtered_data.csv')
+# Load the data from the CSV file
+data = pd.read_csv('filtered_data.csv')
 
-# Assuming the first row could be headers, let's ensure to remove any non-numeric rows. 
-# Convert columns to numeric, coercing errors to NaN (not a number)
-data['temperature'] = pd.to_numeric(data['temperature'], errors='coerce')
-data['pump cooler freq'] = pd.to_numeric(data['pump cooler freq'], errors='coerce')
-data['concentration'] = pd.to_numeric(data['concentration'], errors='coerce')
-data['light intensity'] = pd.to_numeric(data['light intensity'], errors='coerce')
+# Strip any leading or trailing whitespace characters from the column names
+data.columns = data.columns.str.strip()
 
-# Check and drop any rows that contain NaN values (which might have been caused by conversion issues)
-data.dropna(inplace=True)
+# Select the columns needed for the model
+X = data[['temperature', 'light intensity']]  # features
+y = data['concentration']                     # target
 
-# Now let's scale the data
-scaler = StandardScaler()
-data_scaled = scaler.fit_transform(data)
+# Split the data into training and test sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05, random_state=0)
 
-# Apply KMeans clustering
-kmeans = KMeans(n_clusters=3, random_state=42)
-clusters = kmeans.fit_predict(data_scaled)
+# Create a linear regression model
+model = LinearRegression()
 
-# Add cluster information back to the dataframe
-data['Cluster'] = clusters
+# Train the model
+model.fit(X_train, y_train)
 
-# Plotting clusters
-plt.scatter(data['temperature'], data['light intensity'], c=data['Cluster'], cmap='viridis')
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+mse = mean_squared_error(y_test, y_pred)
+print(f"Mean Squared Error: {mse}")
+
+# Visualization using matplotlib
+plt.figure(figsize=(14, 6))
+# Temperatures and Light Intensities for prediction lines
+temperature_range = np.linspace(X_train['temperature'].min(), X_train['temperature'].max(), 100)
+light_intensity_range = np.linspace(X_train['light intensity'].min(), X_train['light intensity'].max(), 100)
+# Prepare data for prediction by using meshgrid
+temperature_mesh, light_intensity_mesh = np.meshgrid(temperature_range, light_intensity_range)
+
+# Flatten the meshgrid arrays and create a feature array
+features = np.vstack([temperature_mesh.ravel(), light_intensity_mesh.ravel()]).T
+predicted_concentration = model.predict(features).reshape(temperature_mesh.shape)
+
+# Plot for temperature vs concentration
+plt.subplot(1, 2, 1)
+plt.scatter(X_train['temperature'], y_train, color='blue', label='Training data')
+plt.scatter(X_test['temperature'], y_test, color='green', label='Test data')
+plt.contourf(temperature_mesh, light_intensity_mesh, predicted_concentration, alpha=0.5, levels=100, cmap='viridis')
+plt.colorbar(label='Predicted Concentration')
+plt.title('Temperature vs Concentration')
 plt.xlabel('Temperature')
-plt.ylabel('Light Intensity')
-plt.title('Data Clusters by Temperature and Light Intensity')
-plt.colorbar()
+plt.ylabel('Concentration')
+plt.legend()
+
+# Plot for light intensity vs concentration
+plt.subplot(1, 2, 2)
+plt.scatter(X_train['light intensity'], y_train, color='blue', label='Training data')
+plt.scatter(X_test['light intensity'], y_test, color='green', label='Test data')
+plt.contourf(temperature_mesh, light_intensity_mesh, predicted_concentration, alpha=0.5, levels=100, cmap='viridis')
+plt.colorbar(label='Predicted Concentration')
+plt.title('Light Intensity vs Concentration')
+plt.xlabel('Light Intensity')
+plt.ylabel('Concentration')
+plt.legend()
+
+plt.tight_layout()
 plt.show()
-# # Split the data into features and target variable
-# # Assuming 'algae growth rate' is a column in your dataset, replace 'algae_growth_rate' with the correct column name
-# X = data.drop('algae_growth_rate', axis=1)
-# y = data['algae_growth_rate']   
 
-# # Split data into train and test sets
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+################# prediction from trained model #################
+# Predict future concentrations
+# Define new data for prediction
+new_data = np.array([
+    [31.0, 1000],  # Example 1
+    [32.5, 2000],  # Example 2
+    [30.0, 6000]   # Example 3
+])
 
-# # Scale the features
-# scaler = StandardScaler()
-# X_train_scaled = scaler.fit_transform(X_train)
-# X_test_scaled = scaler.transform(X_test)
+# Make predictions for the new data
+future_predictions = model.predict(new_data)
 
-# # Initialize the model
-# model = LinearRegression()
+# Display predictions
+for i, input_pair in enumerate(new_data):
+    print(f"Predicted concentration for temperature {input_pair[0]} and light intensity {input_pair[1]}: {future_predictions[i]}")
 
-# # Train the model
-# model.fit(X_train_scaled, y_train)
-# # Make predictions
-# y_pred = model.predict(X_test_scaled)
 
-# # Evaluate the predictions
-# mse = mean_squared_error(y_test, y_pred)
-# print(f'Mean Squared Error: {mse}')
-# # Example of making a prediction
-# # You need to provide an array with values for temperature, pump cooler freq, concentration, light intensity
-# new_data = np.array([[31, 16025, -410175, 4095]])  # Example new data
-# new_data_scaled = scaler.transform(new_data)
-# predicted_growth_rate = model.predict(new_data_scaled)
-# print(f'Predicted Algae Growth Rate: {predicted_growth_rate[0]}')
+
+features_mesh = np.vstack([temperature_mesh.ravel(), light_intensity_mesh.ravel()]).T
+predicted_concentration_mesh = model.predict(features_mesh).reshape(temperature_mesh.shape)
+
+# 3D Plot
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection='3d')
+
+# Scatter plot for actual data points
+ax.scatter(X['temperature'], X['light intensity'], y, color='b', label='Actual data')
+
+# Surface plot for predicted concentration
+ax.plot_surface(temperature_mesh, light_intensity_mesh, predicted_concentration_mesh, color='orange', alpha=0.5)
+
+ax.set_xlabel('Temperature')
+ax.set_ylabel('Light Intensity')
+ax.set_zlabel('Concentration')
+ax.legend()
+ax.set_title('3D View of Linear Regression Fit')
+plt.show()
+
+
+############################ Decision Tree ############################
+from sklearn.tree import DecisionTreeRegressor
+
+# Fit a Decision Tree model
+tree_model = DecisionTreeRegressor(max_depth=5)  # max_depth is a hyperparameter you can tune
+tree_model.fit(X_train, y_train)
+
+# Predict and evaluate
+y_tree_pred = tree_model.predict(X_test)
+tree_mse = mean_squared_error(y_test, y_tree_pred)
+print(f'Mean Squared Error for Decision Tree: {tree_mse}')
+# Make predictions for the new data
+future_predictions = tree_model.predict(new_data)
+
+# Display predictions
+for i, input_pair in enumerate(new_data):
+    print(f"Predicted concentration for temperature {input_pair[0]} and light intensity {input_pair[1]}: {future_predictions[i]}")
