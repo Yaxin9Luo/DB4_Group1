@@ -43,47 +43,54 @@ NUM_SAMPLES = 25
 THERM_B_COEFF = 3950
 ADC_MAX = 1023
 ADC_Vmax = 3.15
+class TemperatureSensor:
+    def __init__(self, pinNumber) -> None:
+        self.adc = ADC(Pin(pinNumber))
+        self.adc.atten(ADC.ATTN_11DB)
+        self.adc.width(ADC.WIDTH_10BIT)
+        
+    def init_temp_sensor(TENP_SENS_ADC_PIN_NO = 26):
+        adc = ADC(Pin(TENP_SENS_ADC_PIN_NO))
+        adc.atten(ADC.ATTN_11DB)
+        adc.width(ADC.WIDTH_10BIT)
+        return adc
 
-def init_temp_sensor(TENP_SENS_ADC_PIN_NO = 26):
-    adc = ADC(Pin(TENP_SENS_ADC_PIN_NO))
-    adc.atten(ADC.ATTN_11DB)
-    adc.width(ADC.WIDTH_10BIT)
-    return adc
+    def read_temp(temp_sens):
+        raw_read = []
+        # Collect NUM_SAMPLES
+        for i in range(1, NUM_SAMPLES+1):
+            raw_read.append(temp_sens.read())
 
-def read_temp(temp_sens):
-    raw_read = []
-    # Collect NUM_SAMPLES
-    for i in range(1, NUM_SAMPLES+1):
-        raw_read.append(temp_sens.read())
+        # Average of the NUM_SAMPLES and look it up in the table
+        raw_average = sum(raw_read)/NUM_SAMPLES
+        print('raw_avg = ' + str(raw_average))
+        print('V_measured = ' + str(adc_V_lookup[round(raw_average)]))
 
-    # Average of the NUM_SAMPLES and look it up in the table
-    raw_average = sum(raw_read)/NUM_SAMPLES
-    print('raw_avg = ' + str(raw_average))
-    print('V_measured = ' + str(adc_V_lookup[round(raw_average)]))
+        # Convert to resistance
+        raw_average = ADC_MAX * adc_V_lookup[round(raw_average)]/ADC_Vmax
+        resistance = (SER_RES * raw_average) / (ADC_MAX - raw_average)
+        print('Thermistor resistance: {} ohms'.format(resistance))
 
-    # Convert to resistance
-    raw_average = ADC_MAX * adc_V_lookup[round(raw_average)]/ADC_Vmax
-    resistance = (SER_RES * raw_average) / (ADC_MAX - raw_average)
-    print('Thermistor resistance: {} ohms'.format(resistance))
+        # Convert to temperature
+        steinhart  = -log(resistance / NOM_RES) / THERM_B_COEFF
+        steinhart += 1.0 / (TEMP_NOM + 273.15)
+        steinhart  = (1.0 / steinhart) - 273.15
+        return steinhart
+    
+    
+############## Test code ################
+# print("I'm alive!\n")
+# utime.sleep_ms(2000)
 
-    # Convert to temperature
-    steinhart  = -log(resistance / NOM_RES) / THERM_B_COEFF
-    steinhart += 1.0 / (TEMP_NOM + 273.15)
-    steinhart  = (1.0 / steinhart) - 273.15
-    return steinhart
+# temp_sens = init_temp_sensor()
 
-print("I'm alive!\n")
-utime.sleep_ms(2000)
+# sample_last_ms = 0
+# SAMPLE_INTERVAL = 1000
 
-temp_sens = init_temp_sensor()
-
-sample_last_ms = 0
-SAMPLE_INTERVAL = 1000
-
-while (True):
-    if utime.ticks_diff(utime.ticks_ms(), sample_last_ms) >= SAMPLE_INTERVAL:
-        temp = read_temp(temp_sens)
-        print('Thermistor temperature: ' + str(temp))
-        sample_last_ms = utime.ticks_ms()
+# while (True):
+#     if utime.ticks_diff(utime.ticks_ms(), sample_last_ms) >= SAMPLE_INTERVAL:
+#         temp = read_temp(temp_sens)
+#         print('Thermistor temperature: ' + str(temp))
+#         sample_last_ms = utime.ticks_ms()
 
 
