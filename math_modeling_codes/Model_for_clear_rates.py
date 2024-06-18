@@ -3,10 +3,10 @@ import numpy as np
 
 # Data
 concentration = np.array([600, 800, 1200, 2400, 3000, 6000, 10000, 20000])
-clearance_rates = np.array([0.030973, 0.726, 0.85, 6.09, 1.8332, 2.69, 2.45, 1.12])
+clearance_rates = np.array([0.030973, 0.726, 0.85, 1.9, 1.8332, 2.69, 2.45, 1.12])
 sd = np.array([0.002603, 0.154, 0.038, 3.37, 0.2726, 0.44, 0.22, 0.5])
 weights = np.ones_like(concentration)
-weights[3] = 10
+weights[3] = 1
 
 # Polynomial fit
 degree = 3  # Polynomial degree
@@ -21,8 +21,8 @@ y_poly = poly_func(np.log(x_poly))  # Apply polynomial function after logarithmi
 plt.figure(figsize=(10, 6))
 plt.errorbar(concentration, clearance_rates, yerr=sd, fmt='o', capsize=5, capthick=2, ecolor='red', marker='o', linestyle='None', markersize=8, color='blue', label='Data with error')
 plt.plot(x_poly, y_poly, 'b-', label=f'{degree} Degree Polynomial Fit')
-plt.title('Scatter Plot of Concentration vs Clearance Rates with Polynomial Fit')
-plt.xlabel('Concentration')
+plt.title('Concentration vs Clearance Rates')
+plt.xlabel('Concentration (L/h per mussel)')
 plt.ylabel('Clearance Rates (L/h)')
 plt.grid(True)
 plt.legend()
@@ -40,8 +40,6 @@ for conc, pred in zip(new_concentrations, predictions):
     print(f"Concentration: {conc} L/h -> Clearance Rate: {pred:.4f} L/h")
 
 ######################### Naive Polynomial Fit #########################
-
-
 
 ######################### None Linear Regression #########################
 # from scipy.optimize import curve_fit

@@ -218,7 +218,7 @@ while RUN == True:
     newTemp = read_temperature(temperatureSensor)
 
     # PID controller
-    actuatorValue = PID.update(newTemp)
+    # actuatorValue = PID.update(newTemp)
 
     # Check messages from subscribed feeds
     try:
@@ -227,52 +227,52 @@ while RUN == True:
         client.disconnect()
         print("\nDisconnected from the server, activities will run locally\n")
 
-    if utime.ticks_diff(utime.ticks_ms(), timeActivationPump) >= ACTIVATION_INTERVAL_PID:
-        adjustSpeedCoolerPump(actuatorValue)
-        timeActivationPump = utime.ticks_ms()
-        print("\n\nActuator:" + str(actuatorValue))
-        print("Avg Temperature:" + str(newTemp))
-        print("Time:" + str(dateAndTime.date_time()))
-        print("PID Values:" + PID.overviewParameters)
-        print("Frequency cooler pump: " + str(pumpCooler.step.freq()))
-        print("Light intensity: " + str(lightSensor.readIntensity()))
+    # if utime.ticks_diff(utime.ticks_ms(), timeActivationPump) >= ACTIVATION_INTERVAL_PID:
+    #     adjustSpeedCoolerPump(actuatorValue)
+    #     timeActivationPump = utime.ticks_ms()
+    #     print("\n\nActuator:" + str(actuatorValue))
+    #     print("Avg Temperature:" + str(newTemp))
+    #     print("Time:" + str(dateAndTime.date_time()))
+    #     print("PID Values:" + PID.overviewParameters)
+    #     print("Frequency cooler pump: " + str(pumpCooler.step.freq()))
+    #     print("Light intensity: " + str(lightSensor.readIntensity()))
 
-        pump1 = pumpCooler.step.freq()
-        # pump2 = pumpAlgae.step.freq()
-        lightIntensity = lightSensor.readIntensity()
-        ODValue = lightSensor.computeOD()
-        concentration = lightSensor.computeConc(ODValue)
+    #     pump1 = pumpCooler.step.freq()
+    #     # pump2 = pumpAlgae.step.freq()
+    #     lightIntensity = lightSensor.readIntensity()
+    #     ODValue = lightSensor.computeOD()
+    #     concentration = lightSensor.computeConc(ODValue)
         
-        # Write to file
-        with open("pid.txt", "a") as my_file:
-            my_file.write(dateAndTime.date_time()+ ", " + str(newTemp)+ ", " + str(pump1) + ", " + str(concentration) + ", " + str(lightIntensity) + "\n")
-            my_file.close()
+    #     # Write to file
+    #     with open("pid.txt", "a") as my_file:
+    #         my_file.write(dateAndTime.date_time()+ ", " + str(newTemp)+ ", " + str(pump1) + ", " + str(concentration) + ", " + str(lightIntensity) + "\n")
+    #         my_file.close()
 
-        # Send to the cloud
-        # TODO: Might want to add an if statement to check if there's connection to avoid multiple printing to the console
-        send_data(newTemp, ODValue, pump1, concentration, newTemp)
+    #     # Send to the cloud
+    #     # TODO: Might want to add an if statement to check if there's connection to avoid multiple printing to the console
+    #     send_data(newTemp, ODValue, pump1, concentration, newTemp)
 
-        # Update the oled screen
-        oledScreen.display_PID_controls(newTemp, concentration, pump1, dateAndTime.date_time())
+    #     # Update the oled screen
+    #     oledScreen.display_PID_controls(newTemp, concentration, pump1, dateAndTime.date_time())
 
-    if (utime.ticks_diff(utime.ticks_ms(), timeActivationFood) >= ACTIVATION_CONCENTRATION_MUSSEL):
-        print("\nAlgae fed with: " + str(cycles_couterclockwise*3200))
-        print("mL: " + str(mLOfFood))
-        pumpAlgae.direction_counterclockwise()
-        pumpAlgae.cycle(cycles_couterclockwise*3200)
+    # if (utime.ticks_diff(utime.ticks_ms(), timeActivationFood) >= ACTIVATION_CONCENTRATION_MUSSEL):
+    #     print("\nAlgae fed with: " + str(cycles_couterclockwise*3200))
+    #     print("mL: " + str(mLOfFood))
+    #     pumpAlgae.direction_counterclockwise()
+    #     pumpAlgae.cycle(cycles_couterclockwise*3200)
         
-        Concentration_mussel_bucket_at_time = 750
+    #     Concentration_mussel_bucket_at_time = 750
         
-        mLOfFood = -Volume_of_bucket*(Concentration_mussel_bucket_at_time - Concentration_mussel_bucket)/(lightSensor.computeConc(lightSensor.computeOD()) - Concentration_mussel_bucket)
-        cycles_clockwise = mLOfFood/0.3155 + CLOCK_WISE_EMPTY_PUMP # Feed the mussel
-        cycles_couterclockwise =  mLOfFood/0.2868 + COUNTERCLOCK_WISE_EMPTY_PUMP # Feed the algae
+    #     mLOfFood = -Volume_of_bucket*(Concentration_mussel_bucket_at_time - Concentration_mussel_bucket)/(lightSensor.computeConc(lightSensor.computeOD()) - Concentration_mussel_bucket)
+    #     cycles_clockwise = mLOfFood/0.3155 + CLOCK_WISE_EMPTY_PUMP # Feed the mussel
+    #     cycles_couterclockwise =  mLOfFood/0.2868 + COUNTERCLOCK_WISE_EMPTY_PUMP # Feed the algae
         
-        print("\nAlgae fed with: " + str(cycles_clockwise*3200))
-        print("mL: " + str(mLOfFood))
-        pumpAlgae.direction_clockwise()
-        pumpAlgae.cycle(cycles_clockwise*3200)
+    #     print("\nAlgae fed with: " + str(cycles_clockwise*3200))
+    #     print("mL: " + str(mLOfFood))
+    #     pumpAlgae.direction_clockwise()
+    #     pumpAlgae.cycle(cycles_clockwise*3200)
         
-        timeActivationFood = utime.ticks_ms()
+    #     timeActivationFood = utime.ticks_ms()
 
     if Pinbutton.value() == 1:
         RUN_TO_FALSE()
