@@ -4,7 +4,7 @@ import numpy as np
 # Data
 concentration = np.array([600, 800, 1200, 2400, 3000, 6000, 10000, 20000])
 clearance_rates = np.array([0.030973, 0.726, 0.85, 1.9, 1.8332, 2.69, 2.45, 1.12])
-sd = np.array([0.002603, 0.154, 0.038, 3.37, 0.2726, 0.44, 0.22, 0.5])
+sd = np.array([0.002603, 0.154, 0.038, 1.002, 0.2726, 0.44, 0.22, 0.5])
 weights = np.ones_like(concentration)
 weights[3] = 1
 
@@ -22,8 +22,8 @@ plt.figure(figsize=(10, 6))
 plt.errorbar(concentration, clearance_rates, yerr=sd, fmt='o', capsize=5, capthick=2, ecolor='red', marker='o', linestyle='None', markersize=8, color='blue', label='Data with error')
 plt.plot(x_poly, y_poly, 'b-', label=f'{degree} Degree Polynomial Fit')
 plt.title('Concentration vs Clearance Rates')
-plt.xlabel('Concentration (L/h per mussel)')
-plt.ylabel('Clearance Rates (L/h)')
+plt.xlabel('Prey Concentration (cells/mL)')
+plt.ylabel('Clearance Rates (L/h per mussel)')
 plt.grid(True)
 plt.legend()
 plt.show()
@@ -37,7 +37,7 @@ new_concentrations = [1500, 5000, 15000]
 predictions = [predict_clearance(c) for c in new_concentrations]
 print("Predicted clearance rates:")
 for conc, pred in zip(new_concentrations, predictions):
-    print(f"Concentration: {conc} L/h -> Clearance Rate: {pred:.4f} L/h")
+    print(f"Concentration: {conc} cell/mL -> Clearance Rate: {pred:.4f} L/h per mussel")
 
 ######################### Naive Polynomial Fit #########################
 
